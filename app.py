@@ -198,8 +198,7 @@ with st.form("form"):
     with col2:
         turma = st.text_input("Turma*", "")
         total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
-        #logo = st.file_uploader("Logo (opcional)", type=["png", "jpg", "jpeg"])
-        st.image("https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/main/logo%20expoente.png", width=200)
+        logo = st.image("https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/main/logo%20expoente.png", width=200)
 
     # Dias da semana interativos
     st.markdown("**Selecione os dias da semana e quantidade de aulas**")
