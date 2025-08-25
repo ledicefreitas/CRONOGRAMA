@@ -180,7 +180,7 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
 
     buffer = io.BytesIO()
     doc.save(buffer)
-    #buffer.seek(0)
+    buffer.seek(0)
     return buffer
 
 # ----------------- UI (Streamlit) -----------------
@@ -198,7 +198,7 @@ with st.form("form"):
     with col2:
         turma = st.text_input("Turma*", "")
         total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
-        logo = st.image("https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/main/logo%20expoente.png", width=200)
+        logo = st.file_uploader("Logo (opcional)", type=["png", "jpg", "jpeg"])
 
     # Dias da semana interativos
     st.markdown("**Selecione os dias da semana e quantidade de aulas**")
