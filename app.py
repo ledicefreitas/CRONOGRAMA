@@ -180,7 +180,7 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
 
     buffer = io.BytesIO()
     doc.save(buffer)
-    buffer.seek(0)
+    #buffer.seek(0)
     return buffer
 
 # ----------------- UI (Streamlit) -----------------
