@@ -91,7 +91,9 @@ def definir_bordas(celula, tamanho=4, cor="000000"):
 def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index):
     table = doc.add_table(rows=1, cols=5)
     table.autofit = False
-    widths = [Inches(1.0), Inches(0.5), Inches(3.5), Inches(2.0), Inches(1.5)]
+
+    # 🔹 Ajuste das larguras para modelo da imagem
+    widths = [Inches(2.5), Inches(1.2), Inches(8.0), Inches(4.0), Inches(3.0)]
     for i, w in enumerate(widths):
         for cell in table.columns[i].cells:
             cell.width = w
