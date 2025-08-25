@@ -3,7 +3,7 @@ from datetime import date, timedelta, datetime
 
 import streamlit as st
 from docx import Document
-from docx.shared import Inches, Pt, RGBColor
+from docx.shared import Pt, RGBColor
 from docx.enum.section import WD_ORIENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -87,12 +87,7 @@ def definir_bordas(celula, tamanho=4, cor="000000"):
 
 def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index):
     table = doc.add_table(rows=1, cols=5)
-    table.autofit = False
-
-    widths = [Inches(2.5), Inches(1.2), Inches(8.0), Inches(4.0), Inches(3.0)]
-    for i, w in enumerate(widths):
-        for cell in table.columns[i].cells:
-            cell.width = w
+    table.autofit = True  # deixa o Word ajustar automaticamente
 
     hdr = table.rows[0].cells
     hdr[0].merge(hdr[-1])
@@ -149,13 +144,11 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
     section.page_width, section.page_height = section.page_height, section.page_width
 
     table_header = doc.add_table(rows=1, cols=2)
-    table_header.autofit = False
-    table_header.columns[0].width = Inches(1.5)
-    table_header.columns[1].width = Inches(8.0)
+    table_header.autofit = True
 
     cell_logo = table_header.rows[0].cells[0]
     if logo_file is not None:
-        cell_logo.paragraphs[0].add_run().add_picture(logo_file, width=Inches(1.2))
+        cell_logo.paragraphs[0].add_run().add_picture(logo_file, width=Pt(60))
 
     cell_info = table_header.rows[0].cells[1]
     p = cell_info.paragraphs[0]
@@ -207,17 +200,15 @@ with st.form("form"):
         total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
         logo = st.file_uploader("Logo (opcional)", type=["png", "jpg", "jpeg"])
 
+    # Dias da semana interativos
     st.markdown("**Selecione os dias da semana e quantidade de aulas**")
     dias_semana_dict = {}
     dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
     for i, dia in enumerate(dias):
-        col1d, col2d = st.columns([2,1])
-        with col1d:
-            marcar = st.checkbox(dia, key=f"dia_{i}")
-        with col2d:
-            if marcar:
-                qtd = st.number_input(f"Aulas na {dia}", min_value=1, step=1, key=f"aulas_{i}")
-                dias_semana_dict[i] = qtd
+        marcar = st.checkbox(dia, key=f"dia_{i}")
+        if marcar:
+            qtd = st.number_input(f"Aulas na {dia}", min_value=1, step=1, key=f"aulas_{i}")
+            dias_semana_dict[i] = qtd
 
     st.markdown("**Compensações** no formato `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Ex.: `10/10/2025->2` (horário de quarta).")
     comps_txt = st.text_input("Compensações (opcional)", "10/10/2025->2")
