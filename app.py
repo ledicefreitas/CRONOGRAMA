@@ -1,5 +1,4 @@
 import io
-import re
 from datetime import date, timedelta, datetime
 
 import streamlit as st
@@ -41,7 +40,7 @@ ETAPA2 = (date(2025, 10, 22), date(2026, 2, 24))
 DATA_MULTIDISCIPLINAR = date(2026, 2, 11)
 TEXTO_MULTIDISCIPLINAR = "Avaliação Multidisciplinar"
 
-# ----------------- LÓGICA DE GERAÇÃO (seu núcleo) -----------------
+# ----------------- LÓGICA DE GERAÇÃO -----------------
 def gerar_datas(inicio, fim, dias_semana_aulas, feriados, recessos, dias_nao_letivos, total_aulas, compensacoes):
     datas = []
     aulas_geradas = 0
@@ -50,7 +49,6 @@ def gerar_datas(inicio, fim, dias_semana_aulas, feriados, recessos, dias_nao_let
 
     while atual <= fim and aulas_geradas < total_aulas:
         weekday = atual.weekday()
-        # Compensação: neste dia vale o "horário de Xª"
         if atual in comp_dict:
             comp_weekday = comp_dict[atual]
             if comp_weekday in dias_semana_aulas:
@@ -62,7 +60,6 @@ def gerar_datas(inicio, fim, dias_semana_aulas, feriados, recessos, dias_nao_let
             atual += timedelta(days=1)
             continue
 
-        # Fluxo normal
         if weekday in dias_semana_aulas:
             em_recesso = any(r[0] <= atual <= r[1] for r in recessos)
             if atual not in feriados and not em_recesso and atual not in dias_nao_letivos:
@@ -92,13 +89,11 @@ def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index
     table = doc.add_table(rows=1, cols=5)
     table.autofit = False
 
-    # 🔹 Ajuste das larguras para modelo da imagem
     widths = [Inches(2.5), Inches(1.2), Inches(8.0), Inches(4.0), Inches(3.0)]
     for i, w in enumerate(widths):
         for cell in table.columns[i].cells:
             cell.width = w
 
-    # Linha mesclada da etapa
     hdr = table.rows[0].cells
     hdr[0].merge(hdr[-1])
     p = hdr[0].paragraphs[0]
@@ -110,11 +105,10 @@ def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index
     run.font.size = Pt(11)
 
     shading = OxmlElement('w:shd')
-    shading.set(qn('w:fill'), "0A1F44")  # Azul escuro
+    shading.set(qn('w:fill'), "0A1F44")
     hdr[0]._tc.get_or_add_tcPr().append(shading)
     definir_bordas(hdr[0])
 
-    # Cabeçalho
     headers = ["DATA", "AULA", "CONTEÚDO", "MATERIAL DE APOIO", "AVALIAÇÃO"]
     row_hdr = table.add_row().cells
     for i, h in enumerate(headers):
@@ -127,7 +121,6 @@ def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index
                     r.font.size = Pt(10)
                     r.font.bold = True
 
-    # Linhas
     for idx, d in enumerate(datas_etapa, start=inicio_index):
         row_cells = table.add_row().cells
         row_cells[0].text = d.strftime("%d/%m/%Y")
@@ -144,20 +137,17 @@ def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index
     return inicio_index + len(datas_etapa)
 
 def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dict, compensacoes, logo_file):
-    # Gera as datas
     datas_aulas = gerar_datas(
         INICIO, FIM,
         dias_semana_dict, FERIADOS, RECESSOS, DIAS_NAO_LETIVOS,
         total_aulas, compensacoes
     )
 
-    # Cria o DOCX em memória
     doc = Document()
     section = doc.sections[0]
     section.orientation = WD_ORIENT.LANDSCAPE
     section.page_width, section.page_height = section.page_height, section.page_width
 
-    # Cabeçalho com logo + info
     table_header = doc.add_table(rows=1, cols=2)
     table_header.autofit = False
     table_header.columns[0].width = Inches(1.5)
@@ -188,7 +178,6 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
 
     doc.add_paragraph("\n")
 
-    # Separar por etapas
     datas_etapa1 = [d for d in datas_aulas if ETAPA1[0] <= d <= ETAPA1[1]]
     datas_etapa2 = [d for d in datas_aulas if ETAPA2[0] <= d <= ETAPA2[1]]
 
@@ -196,7 +185,6 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
     idx = adicionar_tabela_etapa(doc, "ETAPA 1", ETAPA1, datas_etapa1, idx)
     adicionar_tabela_etapa(doc, "ETAPA 2", ETAPA2, datas_etapa2, idx)
 
-    # Exportar para bytes
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -219,30 +207,22 @@ with st.form("form"):
         total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
         logo = st.file_uploader("Logo (opcional)", type=["png", "jpg", "jpeg"])
 
-    st.markdown("**Dias da semana e número de aulas** (0=seg ... 6=dom). Ex.: `3:2,4:1` para qui=2 aulas e sex=1 aula.")
-    dias_txt = st.text_input("Dias e cargas*", "3:2")
+    st.markdown("**Selecione os dias da semana e quantidade de aulas**")
+    dias_semana_dict = {}
+    dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
+    for i, dia in enumerate(dias):
+        col1d, col2d = st.columns([2,1])
+        with col1d:
+            marcar = st.checkbox(dia, key=f"dia_{i}")
+        with col2d:
+            if marcar:
+                qtd = st.number_input(f"Aulas na {dia}", min_value=1, step=1, key=f"aulas_{i}")
+                dias_semana_dict[i] = qtd
 
     st.markdown("**Compensações** no formato `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Ex.: `10/10/2025->2` (horário de quarta).")
     comps_txt = st.text_input("Compensações (opcional)", "10/10/2025->2")
 
     gerar = st.form_submit_button("Gerar cronograma")
-
-def parse_dias(txt: str):
-    if not txt.strip():
-        return {}
-    d = {}
-    for part in txt.split(","):
-        if ":" not in part:
-            continue
-        k, v = part.split(":")
-        k = int(k.strip())
-        v = int(v.strip())
-        if k < 0 or k > 6 or v < 1:
-            raise ValueError("Dia inválido (0..6) ou quantidade < 1.")
-        d[k] = v
-    if not d:
-        raise ValueError("Informe pelo menos um dia no formato correto (ex.: 3:2).")
-    return d
 
 def parse_compensacoes(txt: str):
     res = []
@@ -261,9 +241,7 @@ def parse_compensacoes(txt: str):
 
 if gerar:
     try:
-        dias_semana_dict = parse_dias(dias_txt)
         compensacoes = parse_compensacoes(comps_txt)
-
         if not all([disciplina.strip(), curso.strip(), professor.strip(), turma.strip()]):
             st.error("Preencha todos os campos obrigatórios (*)")
         else:
