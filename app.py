@@ -1,5 +1,6 @@
 import io
 from datetime import date, timedelta, datetime
+import requests
 
 import streamlit as st
 from docx import Document
@@ -39,6 +40,9 @@ ETAPA2 = (date(2025, 10, 22), date(2026, 2, 24))
 # Dia com conteúdo pré-definido
 DATA_MULTIDISCIPLINAR = date(2026, 2, 11)
 TEXTO_MULTIDISCIPLINAR = "Avaliação Multidisciplinar"
+
+# URL da logo no GitHub (RAW)
+LOGO_URL = "https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/refs/heads/main/logo%20expoente.png"
 
 # ----------------- LÓGICA DE GERAÇÃO -----------------
 def gerar_datas(inicio, fim, dias_semana_aulas, feriados, recessos, dias_nao_letivos, total_aulas, compensacoes):
@@ -131,7 +135,7 @@ def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index
                     r.font.size = Pt(10)
     return inicio_index + len(datas_etapa)
 
-def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dict, compensacoes, logo_file):
+def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dict, compensacoes):
     datas_aulas = gerar_datas(
         INICIO, FIM,
         dias_semana_dict, FERIADOS, RECESSOS, DIAS_NAO_LETIVOS,
@@ -146,9 +150,15 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
     table_header = doc.add_table(rows=1, cols=2)
     table_header.autofit = True
 
-    cell_logo = table_header.rows[0].cells[0]
-    if logo_file is not None:
-        cell_logo.paragraphs[0].add_run().add_picture(logo_file, width=Pt(60))
+    # Baixar logo direto do GitHub
+    try:
+        response = requests.get(LOGO_URL)
+        if response.status_code == 200:
+            logo_bytes = io.BytesIO(response.content)
+            cell_logo = table_header.rows[0].cells[0]
+            cell_logo.paragraphs[0].add_run().add_picture(logo_bytes, width=Pt(60))
+    except Exception:
+        pass  # se não carregar a logo, segue sem ela
 
     cell_info = table_header.rows[0].cells[1]
     p = cell_info.paragraphs[0]
@@ -199,7 +209,6 @@ with st.form("form"):
     with col2:
         turma = st.text_input("Turma*", "")
         total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
-        logo = st.file_uploader("Logo (opcional)", type=["png", "jpg", "jpeg"])
 
     gerar = st.form_submit_button("Gerar cronograma")
 
@@ -247,8 +256,7 @@ if gerar:
                 turma=turma.strip(),
                 total_aulas=int(total_aulas),
                 dias_semana_dict=dias_semana_dict,
-                compensacoes=compensacoes,
-                logo_file=logo if logo is not None else None
+                compensacoes=compensacoes
             )
             filename = f"cronograma_{disciplina.strip().replace(' ', '_')}.docx"
             st.success("✅ Cronograma gerado!")
