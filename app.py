@@ -87,7 +87,7 @@ def definir_bordas(celula, tamanho=4, cor="000000"):
 
 def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index):
     table = doc.add_table(rows=1, cols=5)
-    table.autofit = True  # deixa o Word ajustar automaticamente
+    table.autofit = True
 
     hdr = table.rows[0].cells
     hdr[0].merge(hdr[-1])
@@ -189,6 +189,7 @@ st.set_page_config(page_title="Gerador de Cronograma", page_icon="📅", layout=
 st.title("📅 Gerador de Cronograma – Web")
 st.caption("Preencha os dados, clique em Gerar e baixe o .docx. Fácil, rápido e sem drama 😉")
 
+# ---- FORMULÁRIO PRINCIPAL ----
 with st.form("form"):
     col1, col2 = st.columns(2)
     with col1:
@@ -200,21 +201,23 @@ with st.form("form"):
         total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
         logo = st.file_uploader("Logo (opcional)", type=["png", "jpg", "jpeg"])
 
-    # Dias da semana interativos
-    st.markdown("**Selecione os dias da semana e quantidade de aulas**")
-    dias_semana_dict = {}
-    dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
-    for i, dia in enumerate(dias):
-        marcar = st.checkbox(dia, key=f"dia_{i}")
-        if marcar:
-            qtd = st.number_input(f"Aulas na {dia}", min_value=1, step=1, key=f"aulas_{i}")
-            dias_semana_dict[i] = qtd
-
-    st.markdown("**Compensações** no formato `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Ex.: `10/10/2025->2` (horário de quarta).")
-    comps_txt = st.text_input("Compensações (opcional)", "10/10/2025->2")
-
     gerar = st.form_submit_button("Gerar cronograma")
 
+# ---- DIAS DA SEMANA (FORA DO FORM PARA SER REATIVO) ----
+st.markdown("**Selecione os dias da semana e quantidade de aulas**")
+dias_semana_dict = {}
+dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
+for i, dia in enumerate(dias):
+    marcar = st.checkbox(dia, key=f"dia_{i}")
+    if marcar:
+        qtd = st.number_input(f"Aulas na {dia}", min_value=1, step=1, key=f"aulas_{i}")
+        dias_semana_dict[i] = qtd
+
+# ---- COMPENSAÇÕES ----
+st.markdown("**Compensações** no formato `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Ex.: `10/10/2025->2` (horário de quarta).")
+comps_txt = st.text_input("Compensações (opcional)", "10/10/2025->2")
+
+# ----------------- FUNÇÃO AUXILIAR -----------------
 def parse_compensacoes(txt: str):
     res = []
     if not txt.strip():
@@ -230,6 +233,7 @@ def parse_compensacoes(txt: str):
         res.append((data_dt, wd))
     return res
 
+# ----------------- BOTÃO GERAR -----------------
 if gerar:
     try:
         compensacoes = parse_compensacoes(comps_txt)
