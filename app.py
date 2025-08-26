@@ -11,8 +11,6 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 import locale
 
-locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8') 
-
 # ----------------- REGRAS FIXAS DO SEU CALENDÁRIO -----------------
 INICIO = date(2025, 8, 6)
 FIM = date(2026, 2, 24)
