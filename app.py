@@ -1,205 +1,41 @@
-import io
-from datetime import date, timedelta, datetime
-import requests
-
 import streamlit as st
+import pandas as pd
+from datetime import datetime, timedelta
+import requests
+from io import BytesIO
 from docx import Document
-from docx.shared import Pt, RGBColor
-from docx.enum.section import WD_ORIENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
-# ----------------- REGRAS FIXAS DO SEU CALENDÁRIO -----------------
-INICIO = date(2025, 8, 6)
-FIM = date(2026, 2, 24)
+st.title("📅 Gerador de Cronograma de Aulas")
 
-FERIADOS = {
-    date(2025, 9, 7),
-    date(2025, 10, 12),
-    date(2025, 11, 2),
-    date(2025, 11, 15),
-    date(2025, 11, 20),
-    date(2025, 12, 25),
-    date(2026, 1, 1),
-    date(2026, 2, 17),
-}
-
-RECESSOS = [
-    (date(2025, 10, 13), date(2025, 10, 17)),
-    (date(2025, 12, 15), date(2026, 1, 31)),
-    (date(2026, 2, 16), date(2026, 2, 18)),
-]
-
-DIAS_NAO_LETIVOS = {date(2025, 10, 29)}  # formatura
-
-# Etapas
-ETAPA1 = (date(2025, 8, 6), date(2025, 10, 21))
-ETAPA2 = (date(2025, 10, 22), date(2026, 2, 24))
-
-# Dia com conteúdo pré-definido
-DATA_MULTIDISCIPLINAR = date(2026, 2, 11)
-TEXTO_MULTIDISCIPLINAR = "Avaliação Multidisciplinar"
-
-# URL da logo no GitHub (RAW)
-LOGO_URL = "https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/refs/heads/main/logo%20expoente.png"
-
-# ----------------- LÓGICA DE GERAÇÃO -----------------
-def gerar_datas(inicio, fim, dias_semana_aulas, feriados, recessos, dias_nao_letivos, total_aulas, compensacoes):
-    datas = []
-    aulas_geradas = 0
-    atual = inicio
-    comp_dict = {orig: weekday_comp for orig, weekday_comp in compensacoes}
-
-    while atual <= fim and aulas_geradas < total_aulas:
-        weekday = atual.weekday()
-        if atual in comp_dict:
-            comp_weekday = comp_dict[atual]
-            if comp_weekday in dias_semana_aulas:
-                qtd_aulas = dias_semana_aulas[comp_weekday]
-                for _ in range(qtd_aulas):
-                    if aulas_geradas < total_aulas and atual not in datas:
-                        datas.append(atual)
-                        aulas_geradas += 1
-            atual += timedelta(days=1)
-            continue
-
-        if weekday in dias_semana_aulas:
-            em_recesso = any(r[0] <= atual <= r[1] for r in recessos)
-            if atual not in feriados and not em_recesso and atual not in dias_nao_letivos:
-                qtd_aulas = dias_semana_aulas[weekday]
-                for _ in range(qtd_aulas):
-                    if aulas_geradas < total_aulas:
-                        datas.append(atual)
-                        aulas_geradas += 1
-        atual += timedelta(days=1)
-
-    datas.sort()
-    return datas
-
-def definir_bordas(celula, tamanho=4, cor="000000"):
-    tc = celula._tc
+# ------------------------------
+# Função para aplicar bordas em tabelas do Word
+# ------------------------------
+def definir_bordas(cell):
+    tc = cell._tc
     tcPr = tc.get_or_add_tcPr()
-    tblBorders = OxmlElement('w:tcBorders')
-    for edge in ('top','left','bottom','right','insideH','insideV'):
-        border = OxmlElement(f'w:{edge}')
-        border.set(qn('w:val'), 'single')
-        border.set(qn('w:sz'), str(tamanho))
-        border.set(qn('w:color'), cor)
-        tblBorders.append(border)
-    tcPr.append(tblBorders)
+    tcBorders = OxmlElement('w:tcBorders')
+    for b in ("top", "left", "bottom", "right"):
+        border = OxmlElement(f"w:{b}")
+        border.set(qn("w:val"), "single")
+        border.set(qn("w:sz"), "6")
+        border.set(qn("w:space"), "0")
+        border.set(qn("w:color"), "000000")
+        tcBorders.append(border)
+    tcPr.append(tcBorders)
 
-def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index):
-    table = doc.add_table(rows=1, cols=5)
-    table.autofit = True
+# ------------------------------
+# Logo direto do GitHub
+# ------------------------------
+logo_url = "https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/main/logo%20expoente.png"
+response = requests.get(logo_url)
+logo_image = BytesIO(response.content)
 
-    hdr = table.rows[0].cells
-    hdr[0].merge(hdr[-1])
-    p = hdr[0].paragraphs[0]
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(f"{titulo_etapa} ({periodo[0].strftime('%d/%m/%Y')} a {periodo[1].strftime('%d/%m/%Y')})")
-    run.font.color.rgb = RGBColor(255, 255, 255)
-    run.font.bold = True
-    run.font.name = "Arial"
-    run.font.size = Pt(11)
-
-    shading = OxmlElement('w:shd')
-    shading.set(qn('w:fill'), "0A1F44")
-    hdr[0]._tc.get_or_add_tcPr().append(shading)
-    definir_bordas(hdr[0])
-
-    headers = ["DATA", "AULA", "CONTEÚDO", "MATERIAL DE APOIO", "AVALIAÇÃO"]
-    row_hdr = table.add_row().cells
-    for i, h in enumerate(headers):
-        row_hdr[i].text = h
-        for cell in table.columns[i].cells:
-            definir_bordas(cell)
-            for p in cell.paragraphs:
-                for r in p.runs:
-                    r.font.name = "Arial"
-                    r.font.size = Pt(10)
-                    r.font.bold = True
-
-    for idx, d in enumerate(datas_etapa, start=inicio_index):
-        row_cells = table.add_row().cells
-        row_cells[0].text = d.strftime("%d/%m/%Y")
-        row_cells[1].text = str(idx)
-        row_cells[2].text = TEXTO_MULTIDISCIPLINAR if d == DATA_MULTIDISCIPLINAR else ""
-        row_cells[3].text = ""
-        row_cells[4].text = ""
-        for cell in row_cells:
-            definir_bordas(cell)
-            for p in cell.paragraphs:
-                for r in p.runs:
-                    r.font.name = "Arial"
-                    r.font.size = Pt(10)
-    return inicio_index + len(datas_etapa)
-
-def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dict, compensacoes):
-    datas_aulas = gerar_datas(
-        INICIO, FIM,
-        dias_semana_dict, FERIADOS, RECESSOS, DIAS_NAO_LETIVOS,
-        total_aulas, compensacoes
-    )
-
-    doc = Document()
-    section = doc.sections[0]
-    section.orientation = WD_ORIENT.LANDSCAPE
-    section.page_width, section.page_height = section.page_height, section.page_width
-
-    table_header = doc.add_table(rows=1, cols=2)
-    table_header.autofit = True
-
-    # Baixar logo direto do GitHub
-    try:
-        response = requests.get(LOGO_URL)
-        if response.status_code == 200:
-            logo_bytes = io.BytesIO(response.content)
-            cell_logo = table_header.rows[0].cells[0]
-            cell_logo.paragraphs[0].add_run().add_picture(logo_bytes, width=Pt(60))
-    except Exception:
-        pass  # se não carregar a logo, segue sem ela
-
-    cell_info = table_header.rows[0].cells[1]
-    p = cell_info.paragraphs[0]
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(
-        f"COLÉGIO EXPOENTE\n"
-        f"CURSO TÉCNICO EM {curso}\n"
-        f"DISCIPLINA: {disciplina}\n"
-        f"Professor(a): {professor}\n"
-        f"TURMA: {turma}\n"
-        f"CRONOGRAMA 1ª ETAPA e 2ª ETAPA - 2º PERÍODO - 2025"
-    )
-    run.font.bold = True
-    run.font.name = "Arial"
-    run.font.size = Pt(12)
-
-    for row in table_header.rows:
-        for cell in row.cells:
-            definir_bordas(cell)
-
-    doc.add_paragraph("\n")
-
-    datas_etapa1 = [d for d in datas_aulas if ETAPA1[0] <= d <= ETAPA1[1]]
-    datas_etapa2 = [d for d in datas_aulas if ETAPA2[0] <= d <= ETAPA2[1]]
-
-    idx = 1
-    idx = adicionar_tabela_etapa(doc, "ETAPA 1", ETAPA1, datas_etapa1, idx)
-    adicionar_tabela_etapa(doc, "ETAPA 2", ETAPA2, datas_etapa2, idx)
-
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
-
-# ----------------- UI (Streamlit) -----------------
-st.set_page_config(page_title="Gerador de Cronograma", page_icon="📅", layout="centered")
-
-st.title("📅 Gerador de Cronograma – Web")
-st.caption("Preencha os dados, clique em Gerar e baixe o .docx. Fácil, rápido e sem drama 😉")
-
-# ---- FORMULÁRIO PRINCIPAL ----
+# ------------------------------
+# Formulário principal (sem dias da semana ainda)
+# ------------------------------
 with st.form("form"):
     col1, col2 = st.columns(2)
     with col1:
@@ -209,11 +45,14 @@ with st.form("form"):
     with col2:
         turma = st.text_input("Turma*", "")
         total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
+        data_inicio = st.date_input("Data de início*", value=datetime(2025, 8, 4))
 
     gerar = st.form_submit_button("Gerar cronograma")
 
-# ---- DIAS DA SEMANA (FORA DO FORM PARA SER REATIVO) ----
-st.markdown("**Selecione os dias da semana e quantidade de aulas**")
+# ------------------------------
+# Seleção de dias da semana (fora do form → reativo)
+# ------------------------------
+st.markdown("### 📌 Dias da semana e quantidade de aulas")
 dias_semana_dict = {}
 dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
 for i, dia in enumerate(dias):
@@ -222,44 +61,98 @@ for i, dia in enumerate(dias):
         qtd = st.number_input(f"Aulas na {dia}", min_value=1, step=1, key=f"aulas_{i}")
         dias_semana_dict[i] = qtd
 
-# ---- COMPENSAÇÕES ----
-st.markdown("**Compensações** no formato `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Ex.: `10/10/2025->2` (horário de quarta).")
+# ------------------------------
+# Compensações
+# ------------------------------
+st.markdown("### 🔄 Compensações")
+st.markdown("Formato: `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Exemplo: `10/10/2025->2`")
 comps_txt = st.text_input("Compensações (opcional)", "10/10/2025->2")
 
-# ----------------- FUNÇÃO AUXILIAR -----------------
-def parse_compensacoes(txt: str):
-    res = []
-    if not txt.strip():
-        return res
-    for part in txt.split(","):
-        if "->" not in part:
-            continue
-        data_str, wd_str = part.split("->")
-        data_dt = datetime.strptime(data_str.strip(), "%d/%m/%Y").date()
-        wd = int(wd_str.strip())
-        if wd < 0 or wd > 6:
-            raise ValueError("Compensação com weekday inválido (0..6).")
-        res.append((data_dt, wd))
-    return res
+# ------------------------------
+# Datas fixas: avaliações
+# ------------------------------
+avaliacoes = [
+    {"nome": "ETAPA 1", "inicio": datetime(2025, 10, 6), "fim": datetime(2025, 10, 10)},
+    {"nome": "ETAPA 2", "inicio": datetime(2025, 12, 8), "fim": datetime(2025, 12, 8)},
+]
 
-# ----------------- BOTÃO GERAR -----------------
+# ------------------------------
+# Gerar cronograma
+# ------------------------------
 if gerar:
-    try:
-        compensacoes = parse_compensacoes(comps_txt)
-        if not all([disciplina.strip(), curso.strip(), professor.strip(), turma.strip()]):
-            st.error("Preencha todos os campos obrigatórios (*)")
-        else:
-            docx_bytes = gerar_docx(
-                disciplina=disciplina.strip(),
-                curso=curso.strip(),
-                professor=professor.strip(),
-                turma=turma.strip(),
-                total_aulas=int(total_aulas),
-                dias_semana_dict=dias_semana_dict,
-                compensacoes=compensacoes
-            )
-            filename = f"cronograma_{disciplina.strip().replace(' ', '_')}.docx"
-            st.success("✅ Cronograma gerado!")
-            st.download_button("⬇️ Baixar .docx", data=docx_bytes, file_name=filename, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    except Exception as e:
-        st.error(f"Erro: {e}")
+    if not disciplina or not professor or not turma:
+        st.error("⚠️ Preencha todos os campos obrigatórios!")
+    elif not dias_semana_dict:
+        st.error("⚠️ Selecione pelo menos um dia da semana!")
+    else:
+        # Processar compensações
+        compensacoes = {}
+        if comps_txt.strip():
+            for item in comps_txt.split(","):
+                try:
+                    data_str, dia_semana = item.split("->")
+                    data = datetime.strptime(data_str.strip(), "%d/%m/%Y").date()
+                    compensacoes[data] = int(dia_semana)
+                except:
+                    pass
+
+        # Construir cronograma
+        data_atual = data_inicio
+        aulas_restantes = total_aulas
+        registros = []
+
+        while aulas_restantes > 0:
+            # Verificar se data atual é compensação
+            dia_semana = data_atual.weekday()
+            if data_atual in compensacoes:
+                dia_semana = compensacoes[data_atual]
+
+            # Verificar se data é semana de avaliação
+            avaliacao_nome = None
+            for etapa in avaliacoes:
+                if etapa["inicio"].date() <= data_atual <= etapa["fim"].date():
+                    avaliacao_nome = etapa["nome"]
+
+            if avaliacao_nome:
+                registros.append((data_atual.strftime("%d/%m/%Y"), f"AVALIAÇÃO DE {avaliacao_nome}"))
+            elif dia_semana in dias_semana_dict:
+                qtd_aulas = min(dias_semana_dict[dia_semana], aulas_restantes)
+                registros.append((data_atual.strftime("%d/%m/%Y"), f"{qtd_aulas} aulas"))
+                aulas_restantes -= qtd_aulas
+
+            data_atual += timedelta(days=1)
+
+        # Criar DataFrame
+        df = pd.DataFrame(registros, columns=["Data", "Atividade"])
+        st.dataframe(df)
+
+        # Criar documento Word
+        doc = Document()
+        sec = doc.sections[0]
+        header = sec.header
+        pl = header.add_paragraph()
+        run = pl.add_run()
+        run.add_picture(logo_image, width=Inches(0.9))
+        pl.add_run(f"\n{curso} - {turma}\nProfessor(a): {professor}")
+
+        doc.add_paragraph(f"Disciplina: {disciplina}")
+        doc.add_paragraph(f"Total de aulas: {total_aulas}")
+        doc.add_paragraph("")
+
+        tabela = doc.add_table(rows=1, cols=2)
+        hdr = tabela.rows[0].cells
+        hdr[0].text = "Data"
+        hdr[1].text = "Atividade"
+        for cell in hdr:
+            definir_bordas(cell)
+
+        for data, atividade in registros:
+            row = tabela.add_row().cells
+            row[0].text = data
+            row[1].text = atividade
+            for cell in row:
+                definir_bordas(cell)
+
+        output = BytesIO()
+        doc.save(output)
+        st.download_button("📥 Baixar cronograma em Word", data=output.getvalue(), file_name="cronograma.docx")
