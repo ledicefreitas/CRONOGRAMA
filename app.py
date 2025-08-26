@@ -123,7 +123,7 @@ def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index
     hdr[0].merge(hdr[-1])
     p = hdr[0].paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(f"{titulo_etapa} ({periodo[0].strftime('%d/%m/%Y')} a {periodo[1].strftime('%d/%m/%Y')})")
+    run = p.add_run(f"{titulo_etapa} - De {periodo[0].strftime('%d/%m/%y')} a {periodo[1].strftime('%d/%m/%y')}")
     run.font.color.rgb = RGBColor(255, 255, 255)
     run.font.bold = True
     run.font.name = "Arial"
@@ -298,8 +298,8 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
     idx = 1
     rodape_etapa1 = "Obs: Na 1ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia 05/09/25 \n2ª prática – deverá ser aplicada até o dia 03/10/25 \nAs datas das práticas devem constar no cronograma de aulas."
     rodape_etapa2 = "Obs: Na 2ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia xx/xx/25 \n2ª prática – deverá ser aplicada até o dia xx/xx/xx \nAs datas das práticas devem constar no cronograma de aulas."
-    idx = adicionar_tabela_etapa(doc, "ETAPA 1", ETAPA1, datas_etapa1, idx, footer_text=rodape_etapa1)
-    adicionar_tabela_etapa(doc, "ETAPA 2", ETAPA2, datas_etapa2, idx, footer_text=rodape_etapa2)
+    idx = adicionar_tabela_etapa(doc, "1ª ETAPA", ETAPA1, datas_etapa1, idx, footer_text=rodape_etapa1)
+    adicionar_tabela_etapa(doc, "2ª ETAPA", ETAPA2, datas_etapa2, idx, footer_text=rodape_etapa2)
 
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -332,7 +332,7 @@ with col1:
 with col2:
     turma = st.text_input("Turma*", "")
     total_aulas = st.number_input("Número total de aulas*", min_value=1, step=1, value=30)
-    
+
 # ---- DIAS DA SEMANA (fora do form) ----
 st.markdown("**Selecione os dias da semana e quantidade de aulas**")
 dias_semana_dict = {}
