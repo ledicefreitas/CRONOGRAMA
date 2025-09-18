@@ -13,7 +13,7 @@ import locale
 
 # ----------------- REGRAS FIXAS DO SEU CALENDÁRIO -----------------
 INICIO = date(2025, 8, 6)
-FIM = date(2026, 2, 24)
+FIM = date(2026, 2, 19)
 
 FERIADOS = {
     date(2025, 9, 7),
@@ -28,7 +28,7 @@ FERIADOS = {
 
 RECESSOS = [
     (date(2025, 10, 13), date(2025, 10, 17)),
-    (date(2025, 12, 15), date(2026, 1, 31)),
+    (date(2025, 12, 18), date(2026, 1, 31)),
     (date(2026, 2, 16), date(2026, 2, 18)),
 ]
 
@@ -36,7 +36,7 @@ DIAS_NAO_LETIVOS = {date(2025, 10, 29)}  # formatura
 
 # Etapas
 ETAPA1 = (date(2025, 8, 6), date(2025, 10, 21))
-ETAPA2 = (date(2025, 10, 22), date(2026, 2, 24))
+ETAPA2 = (date(2025, 10, 22), date(2026, 2, 19))
 
 # ----------------- DATAS FIXAS -----------------
 DATA_MULTIDISCIPLINAR = date(2026, 2, 11)
@@ -215,96 +215,119 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
         total_aulas, compensacoes
     )
 
-    doc = Document()
-    section = doc.sections[0]
-    section.orientation = WD_ORIENT.LANDSCAPE
-    section.page_width, section.page_height = section.page_height, section.page_width
-
-    # Cabeçalho
-    table_header = doc.add_table(rows=1, cols=2)
-    table_header.autofit = False
-    table_header.allow_autofit = False
-    fix_table_grid(table_header, [3.5, 17.5])
-    for i, w in enumerate([3.5, 17.5]):
-        for cell in table_header.columns[i].cells:
-            cell.width = Cm(w)
-
-    # Logo
-    try:
-        response = requests.get(LOGO_URL)
-        if response.status_code == 200:
-            logo_bytes = io.BytesIO(response.content)
-            cell_logo = table_header.rows[0].cells[0]
-            cell_logo.text = ""
-            p_logo = cell_logo.add_paragraph()
-            p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run_logo = p_logo.add_run()
-            run_logo.add_picture(logo_bytes, width=Cm(2.5))
-    except Exception:
-        pass
-
-    # Texto da direita
-    cell_info = table_header.rows[0].cells[1]
-    cell_info.top_margin = Pt(0)
-    cell_info.bottom_margin = Pt(0)
-    cell_info.left_margin = Pt(0)
-    cell_info.right_margin = Pt(0)
-    cell_info.text = ""
-
-    # 3 primeiras linhas centralizadas
-    p1 = cell_info.paragraphs[0]
-    p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p1.paragraph_format.space_before = Pt(0)
-    p1.paragraph_format.space_after = Pt(0)
-
-    for linha in [
-        "COLÉGIO EXPOENTE",
-        f"CURSO TÉCNICO EM {curso}".upper(),
-        "CRONOGRAMA 1ª ETAPA e 2ª ETAPA - 2º PERÍODO - 2025"
-    ]:
-        run = p1.add_run(linha + "\n")
-        run.font.bold = True
-        run.font.name = "Arial"
-        run.font.size = Pt(12)
-
-    # 3 últimas linhas alinhadas à esquerda
-    p2 = cell_info.add_paragraph()
-    p2.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    p2.paragraph_format.space_before = Pt(0)
-    p2.paragraph_format.space_after = Pt(0)
-
-    ultimas = [
-        f"DISCIPLINA: {disciplina}".upper(),
-        f"Professor(a): {professor}".upper(),
-        f"TURMA: {turma}                                               CARGA HORARIA: {total_aulas}h/a".upper()
-    ]
-
-    for i, linha in enumerate(ultimas):
-        texto = linha if i == len(ultimas)-1 else linha + "\n"
-        run = p2.add_run(texto)
-        run.font.bold = False
-        run.font.name = "Arial"
-        run.font.size = Pt(12)
-
-    for row in table_header.rows:
-        for cell in row.cells:
-            definir_bordas(cell)
-
-    doc.add_paragraph("\n")
-
+    # separa por etapas usando as constantes ETAPA1 e ETAPA2
     datas_etapa1 = [d for d in datas_aulas if ETAPA1[0] <= d <= ETAPA1[1]]
     datas_etapa2 = [d for d in datas_aulas if ETAPA2[0] <= d <= ETAPA2[1]]
 
-    idx = 1
-    rodape_etapa1 = "Obs: Na 1ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia 05/09/25 \n2ª prática – deverá ser aplicada até o dia 03/10/25 \nAs datas das práticas devem constar no cronograma de aulas."
-    rodape_etapa2 = "Obs: Na 2ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia 21/11/25 \n2ª prática – deverá ser aplicada até o dia 06/02/26 \nAs datas das práticas devem constar no cronograma de aulas."
-    idx = adicionar_tabela_etapa(doc, "1ª ETAPA", ETAPA1, datas_etapa1, idx, footer_text=rodape_etapa1)
-    adicionar_tabela_etapa(doc, "2ª ETAPA", ETAPA2, datas_etapa2, idx, footer_text=rodape_etapa2)
+    rodape_etapa1 = (
+        "Obs: Na 1ª etapa serão trabalhadas 02 práticas de formação: \n"
+        "1ª prática – deverá ser aplicada até o dia 05/09/25 \n"
+        "2ª prática – deverá ser aplicada até o dia 03/10/25 \n"
+        "As datas das práticas devem constar no cronograma de aulas."
+    )
+    rodape_etapa2 = (
+        "Obs: Na 2ª etapa serão trabalhadas 02 práticas de formação: \n"
+        "1ª prática – deverá ser aplicada até o dia 21/11/25 \n"
+        "2ª prática – deverá ser aplicada até o dia 06/02/26 \n"
+        "As datas das práticas devem constar no cronograma de aulas."
+    )
 
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
+    def criar_doc(etapa_nome, periodo, datas, inicio_index, rodape):
+        doc = Document()
+        section = doc.sections[0]
+        section.orientation = WD_ORIENT.LANDSCAPE
+        section.page_width, section.page_height = section.page_height, section.page_width
+
+        # Cabeçalho (mesma estrutura que tu já tinha)
+        table_header = doc.add_table(rows=1, cols=2)
+        table_header.autofit = False
+        table_header.allow_autofit = False
+        fix_table_grid(table_header, [3.5, 17.5])
+        for i, w in enumerate([3.5, 17.5]):
+            for cell in table_header.columns[i].cells:
+                cell.width = Cm(w)
+
+        # Logo
+        try:
+            response = requests.get(LOGO_URL)
+            if response.status_code == 200:
+                logo_bytes = io.BytesIO(response.content)
+                cell_logo = table_header.rows[0].cells[0]
+                cell_logo.text = ""
+                p_logo = cell_logo.add_paragraph()
+                p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run_logo = p_logo.add_run()
+                run_logo.add_picture(logo_bytes, width=Cm(2.5))
+        except Exception:
+            pass
+
+        # Texto da direita (titulo e info)
+        cell_info = table_header.rows[0].cells[1]
+        # mantém os ajustes de margem que já usavas
+        try:
+            cell_info.top_margin = Pt(0)
+            cell_info.bottom_margin = Pt(0)
+            cell_info.left_margin = Pt(0)
+            cell_info.right_margin = Pt(0)
+        except Exception:
+            # alguns ambientes de python-docx podem não expor essas props, ok pular
+            pass
+
+        p1 = cell_info.paragraphs[0]
+        p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p1.paragraph_format.space_before = Pt(0)
+        p1.paragraph_format.space_after = Pt(0)
+
+        for linha in [
+            "COLÉGIO EXPOENTE",
+            f"CURSO TÉCNICO EM {curso}".upper(),
+            f"CRONOGRAMA {etapa_nome} - 2º PERÍODO - 2025"
+        ]:
+            run = p1.add_run(linha + "\n")
+            run.font.bold = True
+            run.font.name = "Arial"
+            run.font.size = Pt(12)
+
+        p2 = cell_info.add_paragraph()
+        p2.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p2.paragraph_format.space_before = Pt(0)
+        p2.paragraph_format.space_after = Pt(0)
+
+        ultimas = [
+            f"DISCIPLINA: {disciplina}".upper(),
+            f"Professor(a): {professor}".upper(),
+            f"TURMA: {turma}                                               CARGA HORARIA: {total_aulas}h/a".upper()
+        ]
+
+        for i, linha in enumerate(ultimas):
+            texto = linha if i == len(ultimas)-1 else linha + "\n"
+            run = p2.add_run(texto)
+            run.font.bold = False
+            run.font.name = "Arial"
+            run.font.size = Pt(12)
+
+        for row in table_header.rows:
+            for cell in row.cells:
+                definir_bordas(cell)
+
+        doc.add_paragraph("\n")
+
+        # aqui usamos a função já existente que cria a tabela e numeracão
+        adicionar_tabela_etapa(doc, etapa_nome, periodo, datas, inicio_index, footer_text=rodape)
+
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    # calcula o início da numeração da etapa 2: começa logo após o fim da etapa 1
+    inicio_etapa2 = 1 + len(datas_etapa1)
+
+    buffer1 = criar_doc("1ª ETAPA", ETAPA1, datas_etapa1, inicio_index=1, rodape=rodape_etapa1)
+    buffer2 = criar_doc("2ª ETAPA", ETAPA2, datas_etapa2, inicio_index=inicio_etapa2, rodape=rodape_etapa2)
+
+    return buffer1, buffer2
+
 
 # ----------------- UI (Streamlit) -----------------
 st.set_page_config(page_title="Gerador de Cronograma", page_icon="📅", layout="centered")
@@ -345,7 +368,8 @@ for i, dia in enumerate(dias):
 
 # ---- COMPENSAÇÕES ----
 st.markdown("**Compensações** no formato `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Ex.: `10/10/2025->2`")
-comps_txt = st.text_input("Compensações (opcional)", "10/10/2025->2")
+
+comps_txt = st.text_input(" ")
 
 # ----------------- FUNÇÃO AUXILIAR -----------------
 def parse_compensacoes(txt: str):
@@ -363,26 +387,37 @@ def parse_compensacoes(txt: str):
         res.append((data_dt, wd))
     return res
 
+compensacoes = parse_compensacoes(comps_txt)
+
 # ---- BOTÃO FINAL PARA GERAR CRONOGRAMA ----
 if st.button("Gerar cronograma"):
-    try:
-        compensacoes = parse_compensacoes(comps_txt)
-        if not all([disciplina.strip(), curso.strip(), professor.strip(), turma.strip()]):
-            st.error("Preencha todos os campos obrigatórios (*)")
-        elif not dias_semana_dict:
-            st.error("Selecione ao menos um dia da semana com aulas")
-        else:
-            docx_bytes = gerar_docx(
-                disciplina=disciplina.strip(),
-                curso=curso.strip(),
-                professor=professor.strip(),
-                turma=turma.strip(),
-                total_aulas=int(total_aulas),
-                dias_semana_dict=dias_semana_dict,
-                compensacoes=compensacoes
-            )
-            filename = f"cronograma_{disciplina.strip().replace(' ', '_')}.docx"
-            st.success("✅ Cronograma gerado!")
-            st.download_button("⬇️ Baixar .docx", data=docx_bytes, file_name=filename, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    except Exception as e:
-        st.error(f"Erro: {e}")
+    docx_etapa1, docx_etapa2 = gerar_docx(
+        disciplina=disciplina.strip(),
+        curso=curso.strip(),
+        professor=professor.strip(),
+        turma=turma.strip(),
+        total_aulas=int(total_aulas),
+        dias_semana_dict=dias_semana_dict,
+        compensacoes=compensacoes
+    )
+    st.session_state["docx_etapa1"] = docx_etapa1
+    st.session_state["docx_etapa2"] = docx_etapa2
+    st.success("✅ Cronogramas gerados!")
+
+
+# mostra os botões sempre que já tiver arquivos na session
+if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
+    st.download_button(
+        "⬇️ Baixar 1ª Etapa",
+        data=st.session_state["docx_etapa1"],
+        file_name=f"{professor.strip().replace(' ', '_')} - CRONO - {disciplina.strip().replace(' ', '_')}-T{turma.strip().replace(' ', '_')}.docx".upper(),
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    st.download_button(
+        "⬇️ Baixar 2ª Etapa",
+        data=st.session_state["docx_etapa2"],
+        file_name=f"{professor.strip().replace(' ', '_')} - CRONO - {disciplina.strip().replace(' ', '_')}-T{turma.strip().replace(' ', '_')}.docx".upper(),
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+    
