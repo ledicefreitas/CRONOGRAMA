@@ -336,7 +336,7 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
     buffer1 = criar_doc("1ª ETAPA", ETAPA1, datas_etapa1, inicio_index=1, rodape=rodape_etapa1)
     buffer2 = criar_doc("2ª ETAPA", ETAPA2, datas_etapa2, inicio_index=inicio_etapa2, rodape=rodape_etapa2)
 
-    return buffer1, buffer2
+    return buffer1, buffer2, len(datas_etapa1), len(datas_etapa2)
 
 
 # ----------------- UI (Streamlit) -----------------
@@ -438,4 +438,5 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
 
