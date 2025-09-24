@@ -11,10 +11,6 @@ from uuid import uuid4
 
 
 
-
-locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
-
-
 # ----------------- Funções auxiliares -----------------
 def datas_sobrepostas(inicio1, fim1, inicio2, fim2):
     return not (fim1 < inicio2 or fim2 < inicio1)
