@@ -399,9 +399,8 @@ def parse_compensacoes(txt: str):
 
 compensacoes = parse_compensacoes(comps_txt)
 
-# ---- BOTÃO FINAL PARA GERAR CRONOGRAMA ----
 if st.button("Gerar cronograma"):
-    docx_etapa1, docx_etapa2 = gerar_docx(
+    docx_etapa1, docx_etapa2, total_etapa1, total_etapa2 = gerar_docx(
         disciplina=disciplina.strip(),
         curso=curso.strip(),
         professor=professor.strip(),
@@ -412,7 +411,14 @@ if st.button("Gerar cronograma"):
     )
     st.session_state["docx_etapa1"] = docx_etapa1
     st.session_state["docx_etapa2"] = docx_etapa2
-    st.success("✅ Cronogramas gerados!")
+    st.session_state["total_etapa1"] = total_etapa1
+    st.session_state["total_etapa2"] = total_etapa2
+    st.success(
+        f"Cronogramas gerados! \n"
+        f"**Total de aulas Etapa 1**: {total_etapa1} aulas. \n"
+        f"**Total de aulas Etapa 2**: {total_etapa2} aulas."
+    )
+    #st.success("✅ Cronogramas gerados!")
 
 
 # mostra os botões sempre que já tiver arquivos na session
@@ -432,3 +438,4 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
