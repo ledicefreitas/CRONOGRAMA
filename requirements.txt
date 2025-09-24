@@ -4,4 +4,4 @@ lxml
 pillow
 holidays
 matplotlib.pyplot
-matplotlib.patches
+
