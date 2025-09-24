@@ -1,0 +1,64 @@
+{
+  "inicio": "2025-08-06",
+  "fim": "2026-02-20",
+  "feriados": [
+    "2025-09-07",
+    "2025-10-12",
+    "2025-11-02",
+    "2025-11-15",
+    "2025-11-20",
+    "2025-12-25",
+    "2026-01-01",
+    "2026-02-17"
+  ],
+  "recessos": [
+    [
+      "2025-10-13",
+      "2025-10-17"
+    ],
+    [
+      "2025-12-18",
+      "2026-01-30"
+    ],
+    [
+      "2026-02-16",
+      "2026-02-16"
+    ],
+    [
+      "2026-02-18",
+      "2026-02-18"
+    ]
+  ],
+  "dias_nao_letivos": [
+    "2025-10-29",
+    "2025-10-02"
+  ],
+  "etapas": {
+    "etapa1": [
+      "2025-08-06",
+      "2025-10-22"
+    ],
+    "etapa2": [
+      "2025-10-23",
+      "2026-02-20"
+    ]
+  },
+  "avaliacoes": {
+    "2025-10-06": "AVALIAÇÃO DE ETAPA1",
+    "2025-10-07": "AVALIAÇÃO DE ETAPA1",
+    "2025-10-08": "AVALIAÇÃO DE ETAPA1",
+    "2025-10-09": "AVALIAÇÃO DE ETAPA1",
+    "2025-10-10": "AVALIAÇÃO DE ETAPA1",
+    "2025-12-08": "AVALIAÇÃO DE ETAPA2",
+    "2025-12-09": "AVALIAÇÃO DE ETAPA2",
+    "2025-12-10": "AVALIAÇÃO DE ETAPA2",
+    "2025-12-11": "AVALIAÇÃO DE ETAPA2",
+    "2025-12-12": "AVALIAÇÃO DE ETAPA2",
+    "2026-02-11": "Avaliação Multidisciplinar"
+  },
+  "rodapes": {
+    "etapa1": "Obs: Na 1ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia 05/09/25 \n2ª prática – deverá ser aplicada até o dia 03/10/25 \nAs datas das práticas devem constar no cronograma de aulas.",
+    "etapa2": "Obs: Na 2ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia 21/11/25 \n2ª prática – deverá ser aplicada até o dia 06/02/26 \nAs datas das práticas devem constar no cronograma de aulas."
+  },
+  "compensacoes": []
+}
