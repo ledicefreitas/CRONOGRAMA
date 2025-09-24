@@ -2,5 +2,4 @@ streamlit
 python-docx
 lxml
 pillow
-
-
+matplotlib
