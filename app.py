@@ -24,6 +24,16 @@ FERIADOS = {
     date(2025, 12, 25),
     date(2026, 1, 1),
     date(2026, 2, 17),
+    date(2026, 4, 3),
+    date(2026, 4, 21),
+    date(2026, 5, 1),
+    date(2026, 6, 4),
+    date(2026, 9, 7),
+    date(2026, 10, 12),
+    date(2026, 11, 2),
+    date(2026, 11, 15),
+    date(2026, 11, 20),
+    date(2026, 12, 25)
 }
 
 RECESSOS = [
@@ -419,5 +429,6 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
         file_name=f"{professor.strip().replace(' ', '_')} - CRONO - {disciplina.strip().replace(' ', '_')}-T{turma.strip().replace(' ', '_')}.docx".upper(),
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
+
 
     
