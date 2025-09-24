@@ -1,4 +1,3 @@
-import holidays
 import json
 import locale
 import streamlit as st
@@ -37,26 +36,11 @@ def gerar_datas_intervalo(inicio, fim):
         atual += timedelta(days=1)
     return datas
 
-def obter_feriados_datas(inicio, fim):
-    """Retorna lista de feriados nacionais do Brasil (YYYY-MM-DD) no intervalo informado"""
-    feriados_br = holidays.Brazil(years=range(inicio.year, fim.year+1))
-    datas = []
-    for d in gerar_datas_intervalo(inicio, fim):
-        data_date = datetime.strptime(d, "%Y-%m-%d").date()
-        if data_date in feriados_br:
-            datas.append(d)  # já está em formato string YYYY-MM-DD
-    return datas
 # ----------------- Carregar JSON -----------------
 with open("calendario.json", "r", encoding="utf-8") as f:
     calendario = json.load(f)
-# Recalcular feriados atuais (somente datas)
-inicio_periodo = datetime.strptime(calendario["inicio"], "%Y-%m-%d").date()
-fim_periodo = datetime.strptime(calendario["fim"], "%Y-%m-%d").date()
-calendario["feriados"] = obter_feriados_datas(inicio_periodo, fim_periodo)
 
-# Salvar de volta no JSON (mantém sempre atualizado)
-with open("calendario.json", "w", encoding="utf-8") as f:
-    json.dump(calendario, f, ensure_ascii=False, indent=2)
+from uuid import uuid4
 
 if "rodapes" not in st.session_state:
     st.session_state.rodapes = calendario.get("rodapes", {})
@@ -587,7 +571,7 @@ st.subheader(" ")
 st.subheader("INFORMAÇÕES - DIAS LETIVOS")
 
 # ----------------- Preparar sets para checagem -----------------
-feriados_set = set(calendario.get("feriados", []))
+feriados = calendario.get("feriados", [])
 recessos_set = set()
 for r in st.session_state.recessos:
     recessos_set.update(gerar_datas_intervalo(datetime.strptime(r[0], "%Y-%m-%d").date(),
