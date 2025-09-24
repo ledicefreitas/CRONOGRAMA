@@ -2,6 +2,5 @@ streamlit
 python-docx
 lxml
 pillow
-holidays
-matplotlib.pyplot
+
 
