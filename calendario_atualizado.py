@@ -63,6 +63,7 @@ if st.session_state.compensacoes and isinstance(st.session_state.compensacoes[0]
 
 st.set_page_config(page_title="Calendário Escolar", page_icon="📅", layout="centered")
 st.title("Configuração Calendário Escolar")
+st.caption("Após configurar o Calendário, não se esqueça de Salvar as alterações.")
 
 # ----------------- Agrupar Avaliações em Intervalos -----------------
 if "avaliacoes_etapas" not in st.session_state:
