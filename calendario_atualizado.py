@@ -559,7 +559,8 @@ if st.button("💾 Salvar alterações"):
 
     st.success("✅ Alterações salvas com sucesso!")
 
-     try:
+    try:
+        from github import Github
         token = st.secrets["GITHUB_TOKEN"]
         g = Github(token)
 
