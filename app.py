@@ -40,6 +40,10 @@ AVALIACOES_FIXAS = {
     for d, txt in calendario["avaliacoes"].items()
 }
 
+COMPENSACOES_PADRAO = [
+    (datetime.strptime(c[0], "%Y-%m-%d").date(), int(c[1]))
+    for c in calendario.get("compensacoes", [])
+]
 LOGO_URL = "https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/refs/heads/main/logo%20expoente.png"
 
 # ----------------- LÓGICA DE GERAÇÃO -----------------
@@ -361,7 +365,16 @@ for i, dia in enumerate(dias):
 # ---- COMPENSAÇÕES ----
 st.markdown("**Compensações** no formato `dd/mm/aaaa->n` (n = 0 seg ... 6 dom). Ex.: `10/10/2025->2`")
 
-comps_txt = st.text_input(" ")
+#comps_txt = st.text_input(" ")
+
+# Converte a lista em texto no formato dd/mm/aaaa->n
+comp_texto_inicial = ",".join(
+    f"{d.strftime('%d/%m/%Y')}->{wd}" for d, wd in COMPENSACOES_PADRAO
+)
+
+comps_txt = st.text_input(" ", value=comp_texto_inicial)
+
+compensacoes = parse_compensacoes(comps_txt)
 
 # ----------------- FUNÇÃO AUXILIAR -----------------
 def parse_compensacoes(txt: str):
@@ -420,4 +433,5 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
 
