@@ -46,6 +46,26 @@ COMPENSACOES_PADRAO = [
 ]
 LOGO_URL = "https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/refs/heads/main/logo%20expoente.png"
 
+def parse_compensacoes(texto):
+    """
+    Converte um texto do tipo:
+        '20/02/2026->3, 15/03/2026->5'
+    em uma lista de tuplas:
+        [(date(2026,2,20),3), (date(2026,3,15),5)]
+    """
+    resultado = []
+    if not texto.strip():
+        return resultado
+
+    for item in texto.split(","):
+        try:
+            data_str, dia_semana = item.split("->")
+            data = datetime.strptime(data_str.strip(), "%d/%m/%Y").date()
+            resultado.append((data, int(dia_semana.strip())))
+        except Exception:
+            # ignora entradas inválidas
+            continue
+    return resultado
 # ----------------- LÓGICA DE GERAÇÃO -----------------
 def gerar_datas(inicio, fim, dias_semana_aulas, feriados, recessos, dias_nao_letivos, total_aulas, compensacoes):
     datas = []
@@ -433,5 +453,6 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
 
 
