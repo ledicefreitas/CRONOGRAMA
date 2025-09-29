@@ -437,7 +437,7 @@ with st.container():
 
 # ----------------- Compensações -----------------
 
-DIAS_SEMANA = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado","Domingo"]
+DIAS_SEMANA = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira"]
 
 # --- Inicialização / Migração ---
 if "compensacoes" not in st.session_state:
