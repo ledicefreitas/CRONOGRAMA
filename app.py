@@ -39,11 +39,12 @@ AVALIACOES_FIXAS = {
     datetime.strptime(d, "%Y-%m-%d").date(): txt
     for d, txt in calendario["avaliacoes"].items()
 }
-
+RODAPES = calendario.get("rodapes", {})
 COMPENSACOES_PADRAO = [
     (datetime.strptime(c[0], "%Y-%m-%d").date(), int(c[1]))
     for c in calendario.get("compensacoes", [])
 ]
+
 LOGO_URL = "https://raw.githubusercontent.com/ledicefreitas/CRONOGRAMA/refs/heads/main/logo%20expoente.png"
 
 def parse_compensacoes(texto):
@@ -224,7 +225,7 @@ def adicionar_tabela_etapa(doc, titulo_etapa, periodo, datas_etapa, inicio_index
     return inicio_index + len(datas_etapa)
 
 
-def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dict, compensacoes):
+def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dict, compensacoes,rodapes=RODAPES):
     datas_aulas = gerar_datas(
         INICIO, FIM,
         dias_semana_dict, FERIADOS, RECESSOS, DIAS_NAO_LETIVOS,
@@ -235,19 +236,20 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
     datas_etapa1 = [d for d in datas_aulas if ETAPA1[0] <= d <= ETAPA1[1]]
     datas_etapa2 = [d for d in datas_aulas if ETAPA2[0] <= d <= ETAPA2[1]]
 
-    rodape_etapa1 = (
-        "Obs: Na 1ª etapa serão trabalhadas 02 práticas de formação: \n"
-        "1ª prática – deverá ser aplicada até o dia 05/09/25 \n"
-        "2ª prática – deverá ser aplicada até o dia 03/10/25 \n"
-        "As datas das práticas devem constar no cronograma de aulas."
-    )
-    rodape_etapa2 = (
-        "Obs: Na 2ª etapa serão trabalhadas 02 práticas de formação: \n"
-        "1ª prática – deverá ser aplicada até o dia 21/11/25 \n"
-        "2ª prática – deverá ser aplicada até o dia 06/02/26 \n"
-        "As datas das práticas devem constar no cronograma de aulas."
-    )
-
+    #rodape_etapa1 = (
+    #    "Obs: Na 1ª etapa serão trabalhadas 02 práticas de formação: \n"
+    #    "1ª prática – deverá ser aplicada até o dia 05/09/25 \n"
+    #    "2ª prática – deverá ser aplicada até o dia 03/10/25 \n"
+    #    "As datas das práticas devem constar no cronograma de aulas."
+    #)
+    #rodape_etapa2 = (
+    #    "Obs: Na 2ª etapa serão trabalhadas 02 práticas de formação: \n"
+    #    "1ª prática – deverá ser aplicada até o dia 21/11/25 \n"
+    #    "2ª prática – deverá ser aplicada até o dia 06/02/26 \n"
+    #    "As datas das práticas devem constar no cronograma de aulas."
+    #)
+    rodape_etapa1 = rodapes.get("etapa1", "")
+    rodape_etapa2 = rodapes.get("etapa2", "")
     def criar_doc(etapa_nome, periodo, datas, inicio_index, rodape):
         doc = Document()
         section = doc.sections[0]
@@ -453,6 +455,7 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
 
 
 
