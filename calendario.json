@@ -76,5 +76,10 @@
     "etapa1": "Obs: Na 1ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia 05/09/25 \n2ª prática – deverá ser aplicada até o dia 03/10/25 \nAs datas das práticas devem constar no cronograma de aulas.",
     "etapa2": "Obs: Na 2ª etapa serão trabalhadas 02 práticas de formação: \n1ª prática – deverá ser aplicada até o dia 21/11/25 \n2ª prática – deverá ser aplicada até o dia 06/02/26 \nAs datas das práticas devem constar no cronograma de aulas."
   },
-  "compensacoes": []
+  "compensacoes": [
+    [
+      "2025-09-24",
+      2
+    ]
+  ]
 }
