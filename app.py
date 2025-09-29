@@ -351,7 +351,7 @@ with col2:
 # ---- DIAS DA SEMANA (fora do form) ----
 st.markdown("**Selecione os dias da semana e quantidade de aulas**")
 dias_semana_dict = {}
-dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
+dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
 for i, dia in enumerate(dias):
     marcar = st.checkbox(dia, key=f"dia_{i}")
     if marcar:
@@ -420,3 +420,4 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
