@@ -318,7 +318,7 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
     buffer1 = criar_doc("1ª ETAPA", ETAPA1, datas_etapa1, inicio_index=1, rodape=rodape_etapa1)
     buffer2 = criar_doc("2ª ETAPA", ETAPA2, datas_etapa2, inicio_index=inicio_etapa2, rodape=rodape_etapa2)
 
-    return buffer1, buffer2
+    return buffer1, buffer2, len(datas_etapa1), len(datas_etapa2)
 
 
 # ----------------- UI (Streamlit) -----------------
@@ -383,7 +383,7 @@ compensacoes = parse_compensacoes(comps_txt)
 
 # ---- BOTÃO FINAL PARA GERAR CRONOGRAMA ----
 if st.button("Gerar cronograma"):
-    docx_etapa1, docx_etapa2 = gerar_docx(
+    docx_etapa1, docx_etapa2, total_etapa1, total_etapa2 = gerar_docx(
         disciplina=disciplina.strip(),
         curso=curso.strip(),
         professor=professor.strip(),
@@ -394,7 +394,13 @@ if st.button("Gerar cronograma"):
     )
     st.session_state["docx_etapa1"] = docx_etapa1
     st.session_state["docx_etapa2"] = docx_etapa2
-    st.success("✅ Cronogramas gerados!")
+    st.session_state["total_etapa1"] = total_etapa1
+    st.session_state["total_etapa2"] = total_etapa2
+    st.success(
+        f"Cronogramas gerados! \n"
+        f"**Total de aulas Etapa 1**: {total_etapa1} aulas. \n"
+        f"**Total de aulas Etapa 2**: {total_etapa2} aulas."
+    )
 
 
 # mostra os botões sempre que já tiver arquivos na session
@@ -411,5 +417,6 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
         file_name=f"{professor.strip().replace(' ', '_')} - CRONO - {disciplina.strip().replace(' ', '_')}-T{turma.strip().replace(' ', '_')}.docx".upper(),
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
+
 
     
