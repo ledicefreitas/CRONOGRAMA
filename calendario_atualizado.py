@@ -8,7 +8,8 @@ import calendar
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from uuid import uuid4
-
+from github import Github
+import base64
 
 
 # ----------------- Funções auxiliares -----------------
@@ -558,7 +559,26 @@ if st.button("💾 Salvar alterações"):
 
     st.success("✅ Alterações salvas com sucesso!")
 
+     try:
+        token = st.secrets["GITHUB_TOKEN"]
+        g = Github(token)
 
+        # informe o dono/repositorio corretos
+        repo = g.get_repo("ledicefreitas/CRONOGRAMA")
+        caminho_arquivo = "calendario.json"
+
+        # obtém SHA do arquivo atual
+        conteudo = repo.get_contents(caminho_arquivo)
+        repo.update_file(
+            path=caminho_arquivo,
+            message="Atualização do calendário via app Streamlit",
+            content=json.dumps(calendario, ensure_ascii=False, indent=2),
+            sha=conteudo.sha
+        )
+        st.success("✅ Alterações também salvas no GitHub!")
+    except Exception as e:
+        st.error(f"❗Erro ao salvar no GitHub: {e}")
+        
 st.markdown("---")
 st.subheader(" ")
 
