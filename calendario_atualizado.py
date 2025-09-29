@@ -61,7 +61,7 @@ if st.session_state.compensacoes and isinstance(st.session_state.compensacoes[0]
     st.session_state.compensacoes = migrated
 
 
-
+st.set_page_config(page_title="Calendário Escolar", page_icon="📅", layout="centered")
 st.title("Configuração Calendário Escolar")
 
 # ----------------- Agrupar Avaliações em Intervalos -----------------
