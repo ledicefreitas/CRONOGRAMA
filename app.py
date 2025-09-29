@@ -80,7 +80,7 @@ def gerar_datas(inicio, fim, dias_semana_aulas, feriados, recessos, dias_nao_let
             if comp_weekday in dias_semana_aulas:
                 qtd_aulas = dias_semana_aulas[comp_weekday]
                 for _ in range(qtd_aulas):
-                    if aulas_geradas < total_aulas and atual not in datas:
+                    if aulas_geradas < total_aulas:
                         datas.append(atual)
                         aulas_geradas += 1
             atual += timedelta(days=1)
@@ -453,6 +453,7 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
 
 
 
