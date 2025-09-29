@@ -350,7 +350,7 @@ def gerar_docx(disciplina, curso, professor, turma, total_aulas, dias_semana_dic
 # ----------------- UI (Streamlit) -----------------
 st.set_page_config(page_title="Gerador de Cronograma", page_icon="📅", layout="centered")
 st.title("📅 Gerador Modelo de Cronograma ")
-st.caption("Preencha os dados, clique em Gerar e baixe o .docx já com as \ndatas preenchidas. Fácil, rápido e sem drama 😉")
+st.caption("Preencha os dados, clique em Gerar e baixe o .docx da ETAPA 1 e ETAPA 2 já com as \ndatas preenchidas.")
 
 # ---- FORMULÁRIO PRINCIPAL (somente campos obrigatórios) ----
 #with st.form("form"):
@@ -455,6 +455,7 @@ if "docx_etapa1" in st.session_state and "docx_etapa2" in st.session_state:
 
 
     
+
 
 
 
